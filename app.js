@@ -23,11 +23,15 @@ app.post("/verify", async (req, res) => {
   }
   try {
     const usersCollection = await users();
-    const user = await usersCollection.findOne({});
-    if (username == user.username && password == user.password) {
-      res.status(200).send({ message: "Credentials verified" });
-    } else {
+    const found = await usersCollection.findOne({
+      username: new RegExp(`^${username}$`, "i"),
+    });
+    if (!found) {
       res.status(401).send({ message: "Authentication failed" });
+    } else if (password != found.password) {
+      res.status(401).send({ message: "Authentication failed" });
+    } else {
+      res.status(200).send({ message: "Credentials verified" });
     }
   } catch (e) {
     res.status(500).send({ e });
