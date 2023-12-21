@@ -6,11 +6,26 @@ const { currents, users } = require("./config/mongoCollections");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", async (req, res) => {
+app.get("/data", async (req, res) => {
   try {
+    const time = req.query.time;
+    const depth = req.query.depth;
+    if (!time) {
+      return res
+        .status(400)
+        .send({ message: 'Missing "time" query parameter.' });
+    }
+    if (!depth) {
+      return res
+        .status(400)
+        .send({ message: 'Missing "depth" query parameter.' });
+    }
     const currentsCollection = await currents();
-    const allCurrents = await currentsCollection.find({}).toArray();
-    res.send(allCurrents);
+    const found = await currentsCollection.findOne({
+      time: time,
+      depth: depth,
+    });
+    res.send(found);
   } catch (e) {
     res.status(500).send(e);
   }
