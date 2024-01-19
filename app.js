@@ -7,25 +7,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/data", async (req, res) => {
+  const time = req.query.time;
+  const depth = req.query.depth;
+  if (!time) {
+    return res.status(400).send({ message: 'Missing "time" query parameter.' });
+  }
+  if (!depth) {
+    return res
+      .status(400)
+      .send({ message: 'Missing "depth" query parameter.' });
+  }
   try {
-    const time = req.query.time;
-    const depth = req.query.depth;
-    if (!time) {
-      return res
-        .status(400)
-        .send({ message: 'Missing "time" query parameter.' });
-    }
-    if (!depth) {
-      return res
-        .status(400)
-        .send({ message: 'Missing "depth" query parameter.' });
-    }
     const currentsCollection = await currents();
     const found = await currentsCollection.findOne({
       time: time,
       depth: depth,
     });
-    res.send(found);
+    if (found) {
+      res.send(found);
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
   } catch (e) {
     res.status(500).send(e);
   }
