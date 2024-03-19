@@ -1,18 +1,30 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const port = 8080;
+const jwt = require("jsonwebtoken");
 const { currents, users } = require("./config/mongoCollections");
+require("dotenv").config();
 
+const port = 8080;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/data", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "Sign in to access data" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+    if (err) {
+      return res.status(403).send({ message: "Invalid token" });
+    }
+  });
   const time = req.query.time;
   const depth = req.query.depth;
   if (!time) {
-    return res.status(400).send({ message: 'Missing "time" query parameter.' });
+    return res.status(400).send({ message: 'Missing "time" query parameter' });
   }
   if (!depth) {
     return res
@@ -35,26 +47,41 @@ app.get("/data", async (req, res) => {
   }
 });
 
-app.post("/verify", async (req, res) => {
+app.post("/signin", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).send({ message: "No credentials provided" });
   }
   try {
     const usersCollection = await users();
-    const found = await usersCollection.findOne({
+    const user = await usersCollection.findOne({
       username: new RegExp(`^${username}$`, "i"),
     });
-    if (!found) {
-      res.status(401).send({ message: "Authentication failed" });
-    } else if (password != found.password) {
-      res.status(401).send({ message: "Authentication failed" });
+    if (!user) {
+      res.status(401).send({ message: "Incorrect credentials" });
+    } else if (password != user.password) {
+      res.status(401).send({ message: "Incorrect credentials" });
     } else {
-      res.status(200).send({ message: "Credentials verified" });
+      const token = jwt.sign({ data: user }, process.env.SECRET_KEY);
+      res.status(200).send({ message: "Correct credentials", token: token });
     }
   } catch (e) {
     res.status(500).send({ e });
   }
+});
+
+app.post("/verify", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "No token provided" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+    if (err) {
+      return res.status(403).send({ message: "Invalid token" });
+    }
+    res.status(200).send({ message: "Valid token" });
+  });
 });
 
 app.listen(port, () => {
