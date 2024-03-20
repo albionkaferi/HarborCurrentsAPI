@@ -43,7 +43,7 @@ app.get("/data", async (req, res) => {
       res.status(404).send({ message: "Data not found" });
     }
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -66,7 +66,7 @@ app.post("/signin", async (req, res) => {
       res.status(200).send({ message: "Correct credentials", token: token });
     }
   } catch (e) {
-    res.status(500).send({ e });
+    res.status(500).send({ message: "Internal server error" });
   }
 });
 
