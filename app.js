@@ -16,11 +16,15 @@ app.get("/data", async (req, res) => {
     return res.status(401).send({ message: "Sign in to access data" });
   }
   const token = authHeader.split(" ")[1];
+  let invalid = false;
   jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
     if (err) {
-      return res.status(403).send({ message: "Invalid token" });
+      invalid = true;
     }
   });
+  if (invalid) {
+    return res.status(403).send({ message: "Invalid token" });
+  }
   const time = req.query.time;
   const depth = req.query.depth;
   if (!time) {
