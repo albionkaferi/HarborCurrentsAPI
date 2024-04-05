@@ -25,8 +25,7 @@ app.get("/data", async (req, res) => {
   if (invalid) {
     return res.status(403).send({ message: "Invalid token" });
   }
-  const time = req.query.time;
-  const depth = req.query.depth;
+  const { time, depth, model } = req.query;
   if (!time) {
     return res.status(400).send({ message: 'Missing "time" query parameter' });
   }
@@ -35,11 +34,17 @@ app.get("/data", async (req, res) => {
       .status(400)
       .send({ message: 'Missing "depth" query parameter.' });
   }
+  if (!model) {
+    return res
+      .status(400)
+      .send({ message: 'Missing "model" query parameter.' });
+  }
   try {
     const currentsCollection = await currents();
     const found = await currentsCollection.findOne({
       time: time,
       depth: depth,
+      model: model,
     });
     if (found) {
       res.send(found);
