@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const mongoConfig = {
-  database: "HarborCurrents",
+  database: "harborcurrents",
   serverUrl: process.env.MONGO_URI,
 };
 

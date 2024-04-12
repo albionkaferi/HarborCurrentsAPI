@@ -1,4 +1,4 @@
-const { dbConnection } = require('./mongoConnection');
+const { dbConnection } = require("./mongoConnection");
 
 const getCollectionFn = (collection) => {
   let _col = undefined;
@@ -14,6 +14,6 @@ const getCollectionFn = (collection) => {
 };
 
 module.exports = {
-    currents: getCollectionFn("Currents"),
-    users: getCollectionFn("Users")
-}
+  currents: getCollectionFn("currents"),
+  users: getCollectionFn("users"),
+};
