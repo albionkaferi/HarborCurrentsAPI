@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { currents, users } = require("./config/mongoCollections");
+const { currents, users, series } = require("./config/mongoCollections");
 require("dotenv").config();
 
 const port = 8080;
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/data", async (req, res) => {
+app.get("/currents", async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     return res.status(401).send({ message: "Sign in to access data" });
@@ -46,6 +46,20 @@ app.get("/data", async (req, res) => {
       depth: depth,
       model: model,
     });
+    if (found) {
+      res.send(found);
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
+  } catch (e) {
+    res.status(500).send({ message: "Internal server error" });
+  }
+});
+
+app.get("/series", async (req, res) => {
+  try {
+    const seriesCollection = await series();
+    const found = await seriesCollection.findOne({});
     if (found) {
       res.send(found);
     } else {
