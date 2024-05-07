@@ -57,6 +57,20 @@ app.get("/currents", async (req, res) => {
 });
 
 app.get("/series", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "Sign in to access data" });
+  }
+  const token = authHeader.split(" ")[1];
+  let invalid = false;
+  jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+    if (err) {
+      invalid = true;
+    }
+  });
+  if (invalid) {
+    return res.status(403).send({ message: "Invalid token" });
+  }
   try {
     const seriesCollection = await series();
     const found = await seriesCollection.findOne({});
