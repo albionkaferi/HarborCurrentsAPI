@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const { currents, users, series } = require("./config/mongoCollections");
 require("dotenv").config();
 
@@ -95,13 +96,14 @@ app.post("/signin", async (req, res) => {
       username: new RegExp(`^${username}$`, "i"),
     });
     if (!user) {
-      res.status(401).send({ message: "Incorrect credentials" });
-    } else if (password != user.password) {
-      res.status(401).send({ message: "Incorrect credentials" });
-    } else {
-      const token = jwt.sign({ data: user }, process.env.SECRET_KEY);
-      res.status(200).send({ message: "Correct credentials", token: token });
+      return res.status(401).send({ message: "Incorrect credentials" });
     }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).send({ message: "Incorrect credentials" });
+    }
+    const token = jwt.sign({ data: user }, process.env.SECRET_KEY);
+    res.status(200).send({ message: "Correct credentials", token: token });
   } catch (e) {
     res.status(500).send({ message: "Internal server error" });
   }
